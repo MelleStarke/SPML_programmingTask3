@@ -42,5 +42,9 @@ public class Main {
 		
 		
 		//PUT YOUR CODE FOR THE VARIABLE ELIMINATION ALGORITHM HERE
+                
+                VariableEliminator varElim = new VariableEliminator(Q, O, reader);
+                varElim.eliminateVariables();
+                System.out.println(varElim);
 	}
 }
