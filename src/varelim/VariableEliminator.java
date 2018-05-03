@@ -39,7 +39,11 @@ public class VariableEliminator {
     
     private void removeTablesContaining(String name){
         
-    }   
+    }
+    
+    public ArrayList<Table> getProbTables(){
+        return this.probTables;
+    }
     
     private Table getTargetTable(String name){
         ArrayList<Table> targetTables = new ArrayList<Table>();
@@ -58,9 +62,13 @@ public class VariableEliminator {
     }
     
     private Table reduceTable(Table targetTable, String name) {
-        ArrayList<ProbRow> result = new ArrayList<ProbRow>();
+        Table result = new Table();
+        targetTable.deleteCol(name);
         
-        return null;
+        ArrayList<ProbRow> newTable = targetTable.getTable();
+        result.reduce(newTable);
+        
+        return result;
     }
     
     private ArrayList<Integer> getOrderIndices(){
@@ -72,7 +80,7 @@ public class VariableEliminator {
             if(network.isLeafNode(name) && !(this.queryVar.getName().equals(name)))
                 orderIdxs.add(i);
         }
-       
+       /*
         ArrayList<String> parentsOfQuery = new ArrayList<String>();
         for(Variable parent : queryVar.getParents()){
             parentsOfQuery.add(parent.getName());
@@ -90,7 +98,7 @@ public class VariableEliminator {
             if(parentsOfQuery.contains(name))
                 orderIdxs.add(i);
         }
-
+        */
         return orderIdxs;
     }
     

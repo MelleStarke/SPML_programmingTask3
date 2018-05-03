@@ -25,6 +25,12 @@ public class Table {
 		this.node = node;
 		this.parents = parents;
 	}
+        
+        public Table(){
+            this.table = new ArrayList<ProbRow>();
+            this.node = null;
+            this.parents = new ArrayList<Variable>();
+        }
 
 	/**
 	 * Getter of the table made out of ProbRows
@@ -79,6 +85,54 @@ public class Table {
         }
         
         public void deleteCol(String name){
+            for(int i = 0; i < parents.size(); i++){
+                String parentName = parents.get(i).getName();
+                if(name.equals(parentName))
+                    parents.remove(i);
+            }
+            String nodeName = node.getName();
+            if(name.equals(nodeName)){
+                node = parents.get(0);
+                parents.remove(0);
+            }
             
+            for(ProbRow row : table){
+                row.deleteCol(name);
+            }
+        }
+        
+        public void reduce(ArrayList<ProbRow> table){
+            for(ProbRow row : table){
+                if(!this.containsVals(row))
+                    this.table.add(row.deepcopy());
+                else
+                    this.combineRow(row);
+                
+            }
+        }
+        
+        private void combineRow(ProbRow Qrow){
+            for(ProbRow row : this.table){
+                if(row.sameParentsValues(Qrow))
+                    row.add(Qrow);
+            }
+        }
+        
+        private boolean containsVals(ProbRow Qrow){
+            ArrayList<String> Qvals = Qrow.getValues();
+            for(ProbRow row : this.table){
+                ArrayList<String> vals = row.getValues();
+                if(vals.equals(Qvals))
+                    return true;
+                /*
+                boolean equals = true;
+                for(int i = 0; i < row.getValues().size(); i++)
+                    if(!Qvals.get(i).equals(vals.get(i)))
+                        equals = false;
+                if(equals)
+                    return true;
+                */
+            }
+            return false;
         }
 }

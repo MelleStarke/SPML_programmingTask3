@@ -90,4 +90,33 @@ public class ProbRow {
         public void setValues(ArrayList<String> values){
             this.values = values;
         }
+        
+        public void deleteCol(String name){
+            int nameIdx = 0;
+            System.out.println(parents.get(0));
+            /*
+            for(int i = 0; i < parents.size(); i++){
+                String parentName = parents.get(i).getName();
+                if(name.equals(parentName)){
+                    parents.remove(i);
+                    nameIdx = i + 1;
+                }
+            }
+            String nodeName = node.getName();
+            if(name.equals(nodeName)){
+                node = parents.get(0);
+                parents.remove(0);
+            }
+            */
+            values.remove(nameIdx);
+        }
+        
+        public ProbRow deepcopy(){
+            return this;
+        }
+        
+        public void add(ProbRow row){
+            double addBy = row.getProb();
+            this.prob += addBy;
+        }
 }
