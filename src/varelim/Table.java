@@ -66,4 +66,19 @@ public class Table {
 	public int size() {
 		return table.size();
 	}
+        
+        public boolean contains(String name){
+            for(Variable parent : this.parents)
+                if(name.equals(parent.getName()))
+                    return true;
+            return name.equals(this.node.getName());
+        }
+        
+        public void multiply(Table with){
+            
+        }
+        
+        public void deleteCol(String name){
+            
+        }
 }

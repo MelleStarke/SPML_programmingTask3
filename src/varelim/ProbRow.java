@@ -78,4 +78,16 @@ public class ProbRow {
 	public ArrayList<Variable> getParents(){
 		return parents;
 	}
+        
+        public void setNode(Variable node){
+            this.node = node;
+        }
+        
+        public void setParents(ArrayList<Variable> parents){
+            this.parents = parents;
+        }
+        
+        public void setValues(ArrayList<String> values){
+            this.values = values;
+        }
 }

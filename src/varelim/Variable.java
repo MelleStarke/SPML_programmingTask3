@@ -24,6 +24,7 @@ public class Variable {
 	public Variable(String name, ArrayList<String> values) {
 		this.name = name;
 		this.values = values;
+                this.parents = new ArrayList<Variable>();
 	}
 
 	/**
@@ -123,4 +124,9 @@ public class Variable {
 	public boolean getObserved() {
 		return observed;
 	}
+        
+        @Override
+        public String toString(){
+            return this.name;
+        }
 }

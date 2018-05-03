@@ -499,4 +499,19 @@ public class Networkreader {
 	public String getHeuristic() {
 		return heuristic;
 	}
+        
+        public boolean isLeafNode(String name){
+            for(Variable var : Vs){
+                for(Variable parent : var.getParents())
+                    if(parent.getName().equals(name))
+                        return false;
+            }
+            return true;
+        }
+        
+        public void printProbRows(){
+            for(ProbRow row : probRows){
+                System.out.println(row);
+            }
+        }
 }

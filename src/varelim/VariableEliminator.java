@@ -11,19 +11,87 @@ import java.util.ArrayList;
  * @author Melle
  */
 public class VariableEliminator {
-    private Variable            targetVar;
+    private Variable            queryVar;
     private ArrayList<Variable> observedVars;
     private Networkreader       network;
     private double              probability;
+    private ArrayList<Table>    probTables;
 
     public VariableEliminator(Variable Q, ArrayList<Variable> O, Networkreader network){
-        this.targetVar = Q;
+        this.queryVar = Q;
         this.observedVars = O;
         this.network = network;
+        this.probTables = network.getPs();
     }
     
     public void eliminateVariables(){
+        ArrayList<Integer> orderIdxs = getOrderIndices();
         
+        for(int idx : orderIdxs){
+            ArrayList<Variable> Vs = network.getVs();
+            String varName = Vs.get(idx).getName();
+            Table targetTable = getTargetTable(varName);
+            Table resultTable = reduceTable(targetTable, varName);
+            removeTablesContaining(varName);
+            this.probTables.add(resultTable);
+        }
+    }
+    
+    private void removeTablesContaining(String name){
+        
+    }   
+    
+    private Table getTargetTable(String name){
+        ArrayList<Table> targetTables = new ArrayList<Table>();
+        for(Table tab : this.probTables){
+            if(tab.contains(name))
+                targetTables.add(tab);
+        }
+        
+        Table resultTable = targetTables.get(0);
+        
+        for(int i = 1; i < targetTables.size(); i++){
+            Table next = targetTables.get(i);
+            resultTable.multiply(next);
+        }
+        return resultTable;
+    }
+    
+    private Table reduceTable(Table targetTable, String name) {
+        ArrayList<ProbRow> result = new ArrayList<ProbRow>();
+        
+        return null;
+    }
+    
+    private ArrayList<Integer> getOrderIndices(){
+        ArrayList<Variable> Vs = network.getVs();
+        ArrayList<Integer> orderIdxs = new ArrayList<Integer>();
+        
+        for(int i = 0; i < Vs.size(); i++){
+            String name = Vs.get(i).getName();
+            if(network.isLeafNode(name) && !(this.queryVar.getName().equals(name)))
+                orderIdxs.add(i);
+        }
+       
+        ArrayList<String> parentsOfQuery = new ArrayList<String>();
+        for(Variable parent : queryVar.getParents()){
+            parentsOfQuery.add(parent.getName());
+        }
+        for(int i = 0; i < Vs.size(); i++){
+            String name = Vs.get(i).getName();
+            if(!parentsOfQuery.contains(name)
+                    && !network.isLeafNode(name)
+                    && !this.queryVar.getName().equals(name))
+                orderIdxs.add(i);
+        }
+        
+        for(int i = 0; i < Vs.size(); i++){
+            String name = Vs.get(i).getName();
+            if(parentsOfQuery.contains(name))
+                orderIdxs.add(i);
+        }
+
+        return orderIdxs;
     }
     
     
@@ -31,8 +99,8 @@ public class VariableEliminator {
         return this.probability;
     }
     
-    public void setTarget(Variable target){
-        this.targetVar = target;
+    public void setQuery(Variable target){
+        this.queryVar = target;
     }
     
     public void setObserved(ArrayList<Variable> observed){
@@ -43,8 +111,8 @@ public class VariableEliminator {
         this.network = network;
     }
     
-    public Variable getTarget(){
-        return this.targetVar;
+    public Variable getQuery(){
+        return this.queryVar;
     }
     
     public ArrayList getObserved(){
@@ -58,7 +126,7 @@ public class VariableEliminator {
     @Override
     public String toString(){
         return "Given: " + this.observedVars + "\n"
-                + "Target: " + this.targetVar.getName() + "\n"
+                + "Target: " + this.queryVar.getName() + "\n"
                 + "Probability: " + this.probability; 
     }
 }

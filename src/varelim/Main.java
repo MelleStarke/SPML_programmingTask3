@@ -46,5 +46,6 @@ public class Main {
                 VariableEliminator varElim = new VariableEliminator(Q, O, reader);
                 varElim.eliminateVariables();
                 System.out.println(varElim);
+                
 	}
 }
