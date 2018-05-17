@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class Main {
 	private final static String networkName = "earthquake.bif"; // The network to be read in (format from http://www.bnlearn.com/bnrepository/)
 
-	public static void main(String[] args) throws CloneNotSupportedException {
+	public static void main(String[] args) {
 		
 		// Read in the network
 		Networkreader reader = new Networkreader(networkName); 
@@ -40,14 +40,9 @@ public class Main {
 		// Print the query and observed variables
 		reader.printQueryAndObserved(Q, O); 
 		
+		
 		//PUT YOUR CODE FOR THE VARIABLE ELIMINATION ALGORITHM HERE
                 VariableEliminator varElim = new VariableEliminator(Q, O, reader);
                 varElim.eliminateVariables();
-                System.out.println(varElim.toString());
-                /*ArrayList<Table> tabs = reader.getPs();
-                Table j = tabs.get(3);
-                Table m = tabs.get(4);
-                j.multiply(m);
-                System.out.println(j);*/
         }
 }

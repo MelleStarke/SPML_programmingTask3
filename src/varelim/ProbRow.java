@@ -6,7 +6,7 @@ import java.util.ArrayList;
  * 
  * @author Marcel de Korte, Moira Berens, Djamari Oetringer, Abdullahi Ali, Leonieke van den Bulk
  */
-public class ProbRow {
+public class ProbRow implements Cloneable {
 	private double prob;
 	private ArrayList<String> values;
 	private Variable node;
@@ -25,6 +25,13 @@ public class ProbRow {
 		this.node = node;
 		this.parents = parents;
 	}
+        
+        public ProbRow(ProbRow copyThis){
+            this.prob = copyThis.getProb();
+            this.values = copyThis.getValues();
+            this.node = copyThis.getNode();
+            this.parents = copyThis.getParents();
+        }
 
 	/**
 	 * Check whether two have ProbRows have the same parents
@@ -78,45 +85,225 @@ public class ProbRow {
 	public ArrayList<Variable> getParents(){
 		return parents;
 	}
+
+    void removeVariable(Table tab, int removeIndex) {
+        node = tab.getNode();
+        parents = tab.getParents();
         
-        public void setNode(Variable node){
-            this.node = node;
-        }
+        values.remove(removeIndex);
+    }
+
+    void setProb(double prob) {
+        this.prob = prob;
+    }
+    
+    @Override
+    public ProbRow clone() throws CloneNotSupportedException{
+        ProbRow copy = (ProbRow)super.clone();
+        if(this.node != null)
+            copy.node = this.node.clone();
+        else 
+            copy.node = null;
+        copy.parents = (ArrayList) this.parents.clone();
+        copy.values = (ArrayList) this.values.clone();
+        return copy;
+    }
+
+    public void setNode(Variable node) {
+        this.node = node;
+    }
+
+    public void setParents(ArrayList<Variable> parents){
+        this.parents = parents;
+    }
+
+    public void setValues(ArrayList<String> values) {
+        this.values = values;
+    }
+
+    /**
+     * multiply the probability of this row with the given other row
+     * and appends the corresponding parents and values
+     * 
+     * @param other
+     * @return
+     * @throws CloneNotSupportedException 
+     */
+    public ProbRow multiply(ProbRow other) throws CloneNotSupportedException {
+        ProbRow newRow = this.clone();
         
-        public void setParents(ArrayList<Variable> parents){
-            this.parents = parents;
-        }
+        ArrayList<Variable> newParents = newRow.getParents();
+        newParents.addAll((ArrayList) other.getVariableList().clone());
+        ArrayList<String> newValues = newRow.getValues();
+        newValues.addAll((ArrayList) other.getValues().clone());
+        double newProb = newRow.getProb() * other.getProb();
         
-        public void setValues(ArrayList<String> values){
-            this.values = values;
-        }
+        newRow.setParents(newParents);
+        newRow.setProb(newProb);
+        newRow.setValues(newValues);
         
-        public void deleteCol(String name){
-            int nameIdx = 0;
-            System.out.println(parents.get(0));
-            /*
-            for(int i = 0; i < parents.size(); i++){
-                String parentName = parents.get(i).getName();
-                if(name.equals(parentName)){
-                    parents.remove(i);
-                    nameIdx = i + 1;
+        return newRow;
+    }
+/*
+    public boolean sameMatchingVariableValues(ProbRow other) {
+        ArrayList<String> theseVarNames = (ArrayList)this.getVariableNameList().clone();
+        ArrayList<String> otherVarNames = (ArrayList)other.getVariableNameList().clone();
+        ArrayList<Integer> theseMatchingVariableIndices = new ArrayList<>();
+        ArrayList<Integer> otherMatchingVariableIndices = new ArrayList<>();
+        
+        for(int i = 0; i < theseVarNames.size(); i++){
+            String thisVarName = theseVarNames.get(i);
+            for(int j = 0; j < otherVarNames.size(); j++){
+                String otherVarName = otherVarNames.get(i);
+                if(thisVarName.equals(otherVarName)){
+                    theseMatchingVariableIndices.add(i);
+                    otherMatchingVariableIndices.add(j);
                 }
             }
-            String nodeName = node.getName();
-            if(name.equals(nodeName)){
-                node = parents.get(0);
-                parents.remove(0);
+        }
+        ArrayList<String> theseValues = (ArrayList)this.getValues().clone();
+        ArrayList<String> otherValues = (ArrayList)other.getValues().clone();
+        
+        for(int i = 0; i < theseMatchingVariableIndices.size(); i++){
+            int thisMatchingParentIdx = theseMatchingVariableIndices.get(i);
+            int otherMathingParentIdx = otherMatchingVariableIndices.get(i);
+            String thisMatchingParentValue = theseValues.get(thisMatchingParentIdx);
+            String otherMatchingParentValue = otherValues.get(otherMathingParentIdx);
+            if(!thisMatchingParentValue.equals(otherMatchingParentValue))
+                return false;
+        }
+        return true;
+    }
+
+   
+    public boolean intersectsVariable(ProbRow other) {
+        ArrayList<String> theseVars = this.getVariableNameList();
+        ArrayList<String> otherVars = other.getVariableNameList();
+        
+        for(String thisVar : theseVars)
+            if(otherVars.contains(thisVar))
+                return true;
+        return false;
+    }
+    */
+    /**
+     * returns a full list of variables included in this ProbRow
+     * including the node and the parents
+     * 
+     * @return 
+     */
+    private ArrayList<Variable> getVariableList(){
+        ArrayList<Variable> variableList = new ArrayList<>();
+        if(this.node != null)
+            variableList.add(this.node);
+        for(Variable parent : this.parents)
+            variableList.add(parent);
+        return variableList;
+    }
+    
+    /**
+     * returns a full list of variables included in this ProbRow
+     * including the node and the parents
+     * represented as strings
+     * 
+     * @return 
+     */
+    private ArrayList<String> getVariableNameList(){
+        ArrayList<String> variableList = new ArrayList<>();
+        if(this.node != null)
+            variableList.add(this.node.getName());
+        for(Variable parent : this.parents)
+            variableList.add(parent.getName());
+        return variableList;
+    }
+
+    /**
+     * returns true if any duplicate variables have different values
+     * false otherwise
+     * also removes any duplicate variables from the values and parents list
+     * 
+     * @return 
+     */
+    boolean incorrectDuplicateVariableValue() {
+        ArrayList<int []> duplicateVariableIndices =  this.getDuplicateVariableIndices();
+        if(duplicateVariableIndices.isEmpty())
+            return false;
+        for(int [] pair : duplicateVariableIndices){
+            String firstValue = this.values.get(pair[0]);
+            String secondValue = this.values.get(pair[1]);
+            if(!firstValue.equals(secondValue))
+                return true;
+        }
+        this.removeDuplicateVariables(duplicateVariableIndices);
+        return false;
+    }
+
+    /**
+     * returns a list of index pairs corresponding to the column numbers
+     * of any duplicate variables.
+     * the list is considered to start with the node, then the parents
+     * 
+     * @return 
+     */
+    private ArrayList<int []> getDuplicateVariableIndices() {
+        ArrayList<String> variableNames = this.getVariableNameList();
+        ArrayList<int []> duplicateVariableIndices = new ArrayList<>();
+        for(int i = 0;  i < variableNames.size() - 1; i++){
+            for(int j = i + 1; j < variableNames.size(); j++){
+                String firstVarName = variableNames.get(i);
+                String secondVarName = variableNames.get(j);
+                if(firstVarName.equals(secondVarName))
+                    duplicateVariableIndices.add(new int [] {i, j});
             }
-            */
-            values.remove(nameIdx);
         }
+        return duplicateVariableIndices;
+    }
+
+    /**
+     * removes the 2nd element of each pair that indicates duplicate variables
+     * 
+     * @param duplicateVariableIndices 
+     */
+    private void removeDuplicateVariables(ArrayList<int[]> duplicateVariableIndices) {
+        for(int i = duplicateVariableIndices.size() - 1; i >= 0; i--){
+            int [] pair = duplicateVariableIndices.get(i);
+            int secondIdx = pair[1];
+            this.parents.remove(secondIdx - 1);
+            this.values.remove(secondIdx);
+        }
+    }
+
+    /**
+     * returns true if this ProbRow does not comply with the information
+     * given about an observed variable
+     * 
+     * @param name
+     * @param value
+     * @return 
+     */
+    boolean isIrrelevantRow(String name, String value) {
+        int varIdx = this.getVariableIndex(name);
         
-        public ProbRow deepcopy(){
-            return this;
-        }
-        
-        public void add(ProbRow row){
-            double addBy = row.getProb();
-            this.prob += addBy;
-        }
+        if(this.values.get(varIdx).equals(value))
+            return false;
+        return true;
+    }
+
+    /**
+     * returns an index representation of the variables contained in this ProbRow
+     * considered to start with the node, then the parents
+     * 
+     * @param name
+     * @return 
+     */
+    int getVariableIndex(String name) {
+        if(node != null && node.getName().equals(name))
+            return 0;
+        for(int i = 0; i < this.parents.size(); i++)
+            if(this.parents.get(i).getName().equals(name))
+                return i + 1;
+        throw new IllegalArgumentException(name + " is not contained in this ProbRow: " + this.getVariableNameList().toString());
+    }
+    
+    
 }

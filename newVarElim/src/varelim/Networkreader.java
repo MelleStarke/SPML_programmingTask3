@@ -254,7 +254,7 @@ public class Networkreader {
 	/**
 	 * Asks for a query from the user.
 	 */
-	public void askForQuery() {            
+	public void askForQuery() {
 		System.out.println("\nWhich variable(s) do you want to query? Please enter in the number of the variable.");
 		for (int i = 0; i < Vs.size(); i++) {
 			System.out.println("Variable " + i + ": " + Vs.get(i).getName());
@@ -285,6 +285,7 @@ public class Networkreader {
 	 * Ask the user for observed variables in the network.
 	 */
 	public void askForObservedVariables() {
+
 		obs.clear();
 		System.out.println("Which variable(s) do you want to observe? Please enter in the number of the variable, \n"
 				+ "followed by a comma and the value of the observed variable. Do not use spaces. \n"
@@ -453,22 +454,6 @@ public class Networkreader {
 		}
 		scan.close();
 	}
-        
-        /**
-         * returns true if varName corresponds to a node that is not a parent
-         * false otherwise
-         * 
-         * @param varName
-         * @return 
-         */
-        public boolean isLeafNode(String varName){
-            for(Variable var : Vs){
-                for(Variable parent : var.getParents())
-                    if(parent.getName().equals(varName))
-                        return false;
-            }
-            return true;
-        }
 
 	/**
 	 * Getter of the observed variables.
@@ -514,4 +499,20 @@ public class Networkreader {
 	public String getHeuristic() {
 		return heuristic;
 	}
+        
+        /**
+         * returns true if varName corresponds to a node that is not a parent
+         * false otherwise
+         * 
+         * @param varName
+         * @return 
+         */
+        public boolean isLeafNode(String varName){
+            for(Variable var : Vs){
+                for(Variable parent : var.getParents())
+                    if(parent.getName().equals(varName))
+                        return false;
+            }
+            return true;
+        }
 }

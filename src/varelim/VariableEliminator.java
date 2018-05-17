@@ -1,140 +1,183 @@
 /*
- * Here comes the text of your license
- * Each line should be prefixed with  * 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
 package varelim;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  *
  * @author Melle
  */
 public class VariableEliminator {
-    private Variable            queryVar;
+    private Variable queryVar;
     private ArrayList<Variable> observedVars;
-    private Networkreader       network;
-    private double              probability;
-    private ArrayList<Table>    probTables;
-
+    private Networkreader network;
+    private Table queryVarProb;
+    private ArrayList<Table> probTables;
+    
     public VariableEliminator(Variable Q, ArrayList<Variable> O, Networkreader network){
         this.queryVar = Q;
         this.observedVars = O;
         this.network = network;
         this.probTables = network.getPs();
+        this.queryVarProb = new Table(null, null, null);
     }
     
-    public void eliminateVariables(){
-        ArrayList<Integer> orderIdxs = getOrderIndices();
-        
-        for(int idx : orderIdxs){
-            ArrayList<Variable> Vs = network.getVs();
-            String varName = Vs.get(idx).getName();
-            Table targetTable = getTargetTable(varName);
-            Table resultTable = reduceTable(targetTable, varName);
+    /**
+     * eliminates variables relative to the queried variable
+     * and observed variables
+     * 
+     * @throws CloneNotSupportedException 
+     */
+    public void eliminateVariables() throws CloneNotSupportedException{
+        //removeObservedVariables();
+        ArrayList<String> eliminationOrder =  getEliminationOrderAsStrings();
+        // System.out.println("order: " + eliminationOrder.toString());
+        int i = 0;
+        for(String varName : eliminationOrder){
+            //System.out.println(i);
+            ArrayList<Table> correspondingTables = getCorrespondingTables(varName);
+            Table combinedTable = multiplyTables(correspondingTables);
+            Table reducedTable = reduceTable(combinedTable, varName);
             removeTablesContaining(varName);
-            this.probTables.add(resultTable);
+            probTables.add(reducedTable);
+            i++;
+        }
+        this.queryVarProb = (Table) this.probTables.get(0).clone();
+        this.queryVarProb.normalize();
+    }
+    
+    /**
+     * removes tables containing varName from this.probTables
+     * 
+     * @param var 
+     */
+    public void removeTablesContaining(String varName){
+        Iterator<Table> iter = probTables.iterator();
+        while(iter.hasNext()){
+            Table tab = iter.next();
+            if(tab.contains(varName))
+                iter.remove();
         }
     }
     
-    private void removeTablesContaining(String name){
+    /**
+     * returns a list of all tables containing varName
+     * 
+     * @param varName
+     * @return 
+     */
+    private ArrayList<Table> getCorrespondingTables(String varName){
         
-    }
-    
-    public ArrayList<Table> getProbTables(){
-        return this.probTables;
-    }
-    
-    private Table getTargetTable(String name){
-        ArrayList<Table> targetTables = new ArrayList<Table>();
+        ArrayList<Table> correspondingTables = new ArrayList<>();
         for(Table tab : this.probTables){
-            if(tab.contains(name))
-                targetTables.add(tab);
+            if(tab.contains(varName))
+                correspondingTables.add(tab);
         }
-        
-        Table resultTable = targetTables.get(0);
-        
-        for(int i = 1; i < targetTables.size(); i++){
-            Table next = targetTables.get(i);
-            resultTable.multiply(next);
-        }
-        return resultTable;
+        if(correspondingTables.isEmpty())
+            throw new IllegalArgumentException(varName + "has no corresponding tables");
+        return correspondingTables;
     }
     
-    private Table reduceTable(Table targetTable, String name) {
-        Table result = new Table();
-        targetTable.deleteCol(name);
-        
-        ArrayList<ProbRow> newTable = targetTable.getTable();
-        result.reduce(newTable);
-        
-        return result;
+    /**
+     * reduce the targetTable, relative to the reduceTarget
+     * 
+     * @param targetTable
+     * @param reduceTarget
+     * @return
+     * @throws CloneNotSupportedException 
+     */
+    private Table reduceTable(Table targetTable, String reduceTarget) throws CloneNotSupportedException{
+        Table tableCopy = targetTable.clone();
+        return tableCopy.getReducedTable(reduceTarget);
     }
     
-    private ArrayList<Integer> getOrderIndices(){
-        ArrayList<Variable> Vs = network.getVs();
-        ArrayList<Integer> orderIdxs = new ArrayList<Integer>();
+    /**
+     * returns the order in which variables will be eliminated
+     * as a list of strings
+     * 
+     * @return 
+     */
+    private ArrayList<String> getEliminationOrderAsStrings() throws CloneNotSupportedException{
+        ArrayList<Variable> Vs = getRelevantEliminationVariables();
+        ArrayList<String> order = new ArrayList<String>();
         
-        for(int i = 0; i < Vs.size(); i++){
-            String name = Vs.get(i).getName();
-            if(network.isLeafNode(name) && !(this.queryVar.getName().equals(name)))
-                orderIdxs.add(i);
-        }
-       /*
+        for(Variable var : Vs){
+            String varName = var.getName();
+            if(network.isLeafNode(varName) && !(queryVar.getName().equals(varName)))
+                order.add(varName);
+        }       
         ArrayList<String> parentsOfQuery = new ArrayList<String>();
         for(Variable parent : queryVar.getParents()){
             parentsOfQuery.add(parent.getName());
         }
-        for(int i = 0; i < Vs.size(); i++){
-            String name = Vs.get(i).getName();
-            if(!parentsOfQuery.contains(name)
-                    && !network.isLeafNode(name)
-                    && !this.queryVar.getName().equals(name))
-                orderIdxs.add(i);
+        for(Variable var : Vs){
+            String varName = var.getName();
+            if(!parentsOfQuery.contains(varName)
+                    && !network.isLeafNode(varName)
+                    && !queryVar.getName().equals(varName))
+                order.add(varName);
         }
-        
-        for(int i = 0; i < Vs.size(); i++){
-            String name = Vs.get(i).getName();
-            if(parentsOfQuery.contains(name))
-                orderIdxs.add(i);
+        for(Variable var : Vs){
+            String varName = var.getName();
+            if(parentsOfQuery.contains(varName))
+                order.add(varName);
         }
-        */
-        return orderIdxs;
+        return order;
     }
     
-    
-    public double getProbability(){
-        return this.probability;
+    /**
+     * multiply all tables in a given list until a single one results
+     * also removes irrelevant rows according to the observed variables
+     * 
+     * @param tables
+     * @return
+     * @throws CloneNotSupportedException 
+     */
+    private Table multiplyTables(ArrayList<Table> tables) throws CloneNotSupportedException {
+        Table combinedTable = tables.get(0);
+        tables.remove(0);
+        for(Table tab : tables)
+            combinedTable.multiply(tab);
+        return combinedTable;
     }
     
-    public void setQuery(Variable target){
-        this.queryVar = target;
-    }
-    
-    public void setObserved(ArrayList<Variable> observed){
-        this.observedVars = observed;
-    }
-    
-    public void setNetwork(Networkreader network){
-        this.network = network;
-    }
-    
-    public Variable getQuery(){
-        return this.queryVar;
-    }
-    
-    public ArrayList getObserved(){
-        return this.observedVars;
-    }
-    
-    public Networkreader getNetwork(){
-        return this.network;
+    private void removeObservedVariables(){
+        for(int i = 0; i < this.observedVars.size(); i++){
+            Variable observedVar = this.observedVars.get(i);
+            String observedName = observedVar.getName();
+            Iterator tabIter = this.probTables.iterator();
+            while(tabIter.hasNext()){
+                Table tab = (Table) tabIter.next();
+                if(tab.getNode().equals(observedVar)){
+                    tabIter.remove();
+                } else {
+                    tab.removeObservedVariable(observedVar);
+                }
+            }
+        }
     }
     
     @Override
     public String toString(){
-        return "Given: " + this.observedVars + "\n"
+        return "\nGiven: " + this.observedVars + "\n"
                 + "Target: " + this.queryVar.getName() + "\n"
-                + "Probability: " + this.probability; 
+                + "Probability: " + this.queryVarProb; 
     }
+
+    private ArrayList<Variable> getRelevantEliminationVariables() throws CloneNotSupportedException {
+        ArrayList<Variable> result = new ArrayList<>();
+        for(Variable v : this.network.getVs()){
+            if(!v.equals(this.queryVar) && !v.equalsAny(this.observedVars))
+                result.add(v.clone());
+        }
+        return result;
+    }
+
+    
+    
 }

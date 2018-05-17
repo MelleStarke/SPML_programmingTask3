@@ -19,13 +19,11 @@ public class Variable implements Cloneable {
 	/**
 	 * Constructor of the class.
 	 * @param name, name of the variable.
-	 * @param values, the value of the variable.
+	 * @param value, the value of the variable.
 	 */
 	public Variable(String name, ArrayList<String> values) {
 		this.name = name;
 		this.values = values;
-                this.parents = new ArrayList<>();
-                this.value  = "";
 	}
 
 	/**
@@ -127,37 +125,14 @@ public class Variable implements Cloneable {
 	}
         
         @Override
-        public String toString(){
-            return "not finished yet";
-        }
-        
-        @Override
         public Variable clone() throws CloneNotSupportedException{
-            Variable copy = (Variable)super.clone();
-            copy.setName(this.getName());
-            copy.setObserved(this.getObserved());
-            copy.setParents((ArrayList)this.getParents().clone());
-            copy.setValue(this.getValue());
-            copy.setValues((ArrayList)this.getValues().clone());
+            Variable copy = (Variable) super.clone();
+            copy.parents = (ArrayList) this.parents.clone();
+            copy.values = (ArrayList) this.values.clone();
             return copy;
         }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setValues(ArrayList<String> values) {
-        this.values = values;
-    }
-    
-    public boolean equals(Variable other){
-        return this.getName().equals(other.getName());
-    }
-
-    boolean equalsAny(ArrayList<Variable> vars) {
-        for(Variable var : vars)
-            if(this.equals(var))
-                return true;
-        return false;
-    }
+        
+        public boolean equalName(Variable other){
+            return this.name.equals(other.getName());
+        }
 }
