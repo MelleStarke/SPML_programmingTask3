@@ -100,15 +100,15 @@ public class Table implements Cloneable {
      * @param tab
      * @throws CloneNotSupportedException 
      */
-    void multiply(Table tab) throws CloneNotSupportedException {
+    
+    public void multiply(Table other) throws CloneNotSupportedException{
         ArrayList<ProbRow> newTable = new ArrayList<>();
         
-        for(ProbRow thisRow : table){
-            for(ProbRow otherRow : tab.getTable()){
-                newTable.add(thisRow.multiply(otherRow));
-            }
-        }
-        ArrayList<ProbRow> trimmedTable = this.trimDuplicateVariables(newTable);
+        for(ProbRow thisRow : this.table)
+            for(ProbRow otherRow : other.getTable())
+                if(thisRow.sameMatchingVariableValues(otherRow))
+                    newTable.add(thisRow.multiply(otherRow));
+        
         this.node = newTable.get(0).getNode();
         this.parents = newTable.get(0).getParents();
         
@@ -184,15 +184,7 @@ public class Table implements Cloneable {
      * @param table
      * @return 
      */
-    private ArrayList<ProbRow> trimDuplicateVariables(ArrayList<ProbRow> table) {
-        Iterator iter = table.iterator();
-        while(iter.hasNext()){
-            ProbRow row = (ProbRow)iter.next();
-            if(row.incorrectDuplicateVariableValue())
-                iter.remove();
-        }
-        return table;
-    }
+
 
     /**
      * normalize the probabilities contained in this table

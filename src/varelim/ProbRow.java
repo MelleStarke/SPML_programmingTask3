@@ -11,6 +11,7 @@ public class ProbRow implements Cloneable {
 	private ArrayList<String> values;
 	private Variable node;
 	private ArrayList<Variable> parents;
+        private ArrayList<Variable> variables;
 
 	/**
 	 * Constructor
@@ -24,14 +25,9 @@ public class ProbRow implements Cloneable {
 		this.values = values;
 		this.node = node;
 		this.parents = parents;
+                this.variables = parents;
+                this.variables.set(0, node);
 	}
-        
-        public ProbRow(ProbRow copyThis){
-            this.prob = copyThis.getProb();
-            this.values = copyThis.getValues();
-            this.node = copyThis.getNode();
-            this.parents = copyThis.getParents();
-        }
 
 	/**
 	 * Check whether two have ProbRows have the same parents
@@ -224,20 +220,7 @@ public class ProbRow implements Cloneable {
      * 
      * @return 
      */
-    boolean incorrectDuplicateVariableValue() {
-        ArrayList<int []> duplicateVariableIndices =  this.getDuplicateVariableIndices();
-        if(duplicateVariableIndices.isEmpty())
-            return false;
-        for(int [] pair : duplicateVariableIndices){
-            String firstValue = this.values.get(pair[0]);
-            String secondValue = this.values.get(pair[1]);
-            if(!firstValue.equals(secondValue))
-                return true;
-        }
-        this.removeDuplicateVariables(duplicateVariableIndices);
-        return false;
-    }
-
+  
     /**
      * returns a list of index pairs corresponding to the column numbers
      * of any duplicate variables.
@@ -264,14 +247,7 @@ public class ProbRow implements Cloneable {
      * 
      * @param duplicateVariableIndices 
      */
-    private void removeDuplicateVariables(ArrayList<int[]> duplicateVariableIndices) {
-        for(int i = duplicateVariableIndices.size() - 1; i >= 0; i--){
-            int [] pair = duplicateVariableIndices.get(i);
-            int secondIdx = pair[1];
-            this.parents.remove(secondIdx - 1);
-            this.values.remove(secondIdx);
-        }
-    }
+
 
     /**
      * returns true if this ProbRow does not comply with the information
@@ -303,6 +279,36 @@ public class ProbRow implements Cloneable {
             if(this.parents.get(i).getName().equals(name))
                 return i + 1;
         throw new IllegalArgumentException(name + " is not contained in this ProbRow: " + this.getVariableNameList().toString());
+    }
+
+    boolean sameMatchingVariableValues(ProbRow other) {
+        ArrayList<Variable> theseVars = this.getVariableList();
+        ArrayList<Variable> otherVars = other.getVariableList();
+        ArrayList<String> theseValues = this.getValues();
+        ArrayList<String> otherValues = other.getValues();
+        
+        ArrayList<Integer> removeIdxs = new ArrayList<>();
+        
+        for(int i = 0; i < theseVars.size(); i++){
+            Variable thisVar = theseVars.get(i);
+            String thisValue = theseValues.get(i);
+            for(int j = 0; j < otherVars.size(); j++){
+                Variable otherVar = otherVars.get(j);
+                String otherValue = otherValues.get(j);
+                if(thisVar.equals(otherVar) && !thisValue.equals(otherValue))
+                    return false;
+            }
+        }
+        this.removeDuplicateVariables(removeIdxs);
+        
+        return true;
+    }
+
+    private void removeDuplicateVariables(ArrayList<Integer> removeIdxs) {
+        for(int i = removeIdxs.size(); i >= 0; i--){
+            this.values.remove(i);
+            this.variables.remove(i);
+        }
     }
     
     

@@ -7,12 +7,14 @@ package varelim;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Scanner;
 
 /**
  *
  * @author Melle
  */
 public class VariableEliminator {
+    private final boolean debug = true;
     private Variable queryVar;
     private ArrayList<Variable> observedVars;
     private Networkreader network;
@@ -34,16 +36,37 @@ public class VariableEliminator {
      * @throws CloneNotSupportedException 
      */
     public void eliminateVariables() throws CloneNotSupportedException{
+        Scanner scan = new Scanner(System.in);
         //removeObservedVariables();
         ArrayList<String> eliminationOrder =  getEliminationOrderAsStrings();
+        if(debug){
+            System.out.println("elimination order:\n" + eliminationOrder);
+            scan.nextLine();
+        }
+        
         // System.out.println("order: " + eliminationOrder.toString());
         int i = 0;
         for(String varName : eliminationOrder){
             //System.out.println(i);
             ArrayList<Table> correspondingTables = getCorrespondingTables(varName);
-            Table combinedTable = multiplyTables(correspondingTables);
-            Table reducedTable = reduceTable(combinedTable, varName);
+            if(debug){
+                System.out.println("corresponding tables:\n" + correspondingTables);
+                scan.nextLine();
+            }
             removeTablesContaining(varName);
+            
+            Table combinedTable = multiplyTables(correspondingTables);
+            if(debug){
+                System.out.println("combined table:\n" + combinedTable);
+                scan.nextLine();
+            }
+            
+            Table reducedTable = reduceTable(combinedTable, varName);
+            if(debug){
+                System.out.println("reduced table:\n" + reducedTable);
+                scan.nextLine();
+            }
+            
             probTables.add(reducedTable);
             i++;
         }
@@ -141,6 +164,7 @@ public class VariableEliminator {
     private Table multiplyTables(ArrayList<Table> tables) throws CloneNotSupportedException {
         Table combinedTable = tables.get(0);
         tables.remove(0);
+        System.out.println("table size: " + tables.size());
         for(Table tab : tables)
             combinedTable.multiply(tab);
         return combinedTable;
