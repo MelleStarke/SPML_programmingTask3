@@ -6,6 +6,8 @@
 package varelim;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  *
@@ -15,7 +17,7 @@ public class VariableEliminator {
     private Variable queryVar;
     private ArrayList<Variable> observedVars;
     private Networkreader network;
-    private Table queryVarProb;
+    private Table queryVarTable;
     private ArrayList<Table> probTables;
     
     public VariableEliminator(Variable Q, ArrayList<Variable> O, Networkreader network){
@@ -23,45 +25,105 @@ public class VariableEliminator {
         this.observedVars = O;
         this.network = network;
         this.probTables = network.getPs();
-        this.queryVarProb = new Table(null, null, null);
+        this.queryVarTable = null;
     }
 
-    void eliminateVariables() {
+    void eliminateVariables() throws CloneNotSupportedException {
         reduceObservedVariables();
-        String [] eliminationOrder = getEliminationOrder();
+        ArrayList<String> eliminationOrder = getEliminationOrder();
+        //System.out.println(probTables);
         
         for(String varName : eliminationOrder){
             ArrayList<Table> correspondingTables = getCorrespondingTables(varName);
+            removeTablesContaining(varName);
             Table combinedTable = multiplyTables(correspondingTables);
             Table reducedTable = reduceTable(combinedTable, varName);
-            removeTablesContaining(varName);
             probTables.add(reducedTable);
         }
-        this.queryVarProb = (Table) this.probTables.clone();
-        this.queryVarProb.normalize();
+        this.queryVarTable = (Table) this.probTables.clone();
+        this.queryVarTable.normalize();
     }
 
     private void reduceObservedVariables() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
     }
 
-    private String[] getEliminationOrder() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private ArrayList<String> getEliminationOrder() throws CloneNotSupportedException {
+        ArrayList<Variable> Vs = getRelevantEliminationVariables();
+        ArrayList<String> order = new ArrayList<String>();
+        
+        for(Variable var : Vs){
+            String varName = var.getName();
+            if(network.isLeafNode(varName) && !(queryVar.getName().equals(varName)))
+                order.add(varName);
+        }       
+        ArrayList<String> parentsOfQuery = new ArrayList<String>();
+        for(Variable parent : queryVar.getParents()){
+            parentsOfQuery.add(parent.getName());
+        }
+        for(Variable var : Vs){
+            String varName = var.getName();
+            if(!parentsOfQuery.contains(varName)
+                    && !network.isLeafNode(varName)
+                    && !queryVar.getName().equals(varName))
+                order.add(varName);
+        }
+        for(Variable var : Vs){
+            String varName = var.getName();
+            if(parentsOfQuery.contains(varName))
+                order.add(varName);
+        }
+        return order;
+    }
+    
+    private ArrayList<Variable> getRelevantEliminationVariables() throws CloneNotSupportedException {
+        ArrayList<Variable> result = new ArrayList<>();
+        for(Variable v : this.network.getVs()){
+            if(!v.equals(this.queryVar) && !v.equalsAny(this.observedVars))
+                result.add(v);
+        }
+        return result;
     }
 
-    private ArrayList<Table> getCorrespondingTables(String varName) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private ArrayList<Table> getCorrespondingTables(String varName){
+        ArrayList<Table> correspondingTables = new ArrayList<>();
+        for(Table tab : this.probTables){
+            if(tab.containsVariable(varName))
+                correspondingTables.add(tab);
+        }
+        if(correspondingTables.isEmpty())
+            throw new IllegalArgumentException(varName + "has no corresponding tables");
+        return correspondingTables;
     }
-
-    private Table multiplyTables(ArrayList<Table> correspondingTables) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    private Table reduceTable(Table combinedTable, String varName) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
+    
     private void removeTablesContaining(String varName) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Iterator<Table> iter = probTables.iterator();
+        while(iter.hasNext()){
+            Table tab = iter.next();
+            if(tab.containsVariable(varName))
+                iter.remove();
+        }
+    }
+
+    private Table multiplyTables(ArrayList<Table> tables) throws CloneNotSupportedException {
+        Table combinedTable = tables.get(0);
+        tables.remove(0);
+        System.out.println("table size: " + tables.size());
+        for(Table tab : tables)
+            combinedTable.multiply(tab);
+        return combinedTable;
+    }
+
+    private Table reduceTable(Table table, String reduceTarget) throws CloneNotSupportedException {
+        table.reduceTable(reduceTarget);
+        return table;
+    }
+    
+    @Override
+    public String toString(){
+        return "queried:\t" + this.queryVar + "\n"
+                + "observed:\t" + this.observedVars + "\n"
+                + "result:\n"
+                + this.queryVarTable;
     }
 }

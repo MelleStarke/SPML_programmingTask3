@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class Main {
 	private final static String networkName = "earthquake.bif"; // The network to be read in (format from http://www.bnlearn.com/bnrepository/)
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws CloneNotSupportedException {
 		
 		// Read in the network
 		Networkreader reader = new Networkreader(networkName); 
