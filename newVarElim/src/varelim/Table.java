@@ -1,6 +1,7 @@
 package varelim;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Class to represent the Table Object consisting of probability rows
@@ -27,8 +28,8 @@ public class Table implements Cloneable {
         this.parents = parents;
         this.variables = parents;
         this.variables = new ArrayList<>();
-        this.variables.add(node);
         this.variables.addAll(parents);  
+        this.variables.add(node);
     }
 
     /**
@@ -119,7 +120,7 @@ public class Table implements Cloneable {
                         }
                     }
                 for(ProbRow row : this.table){
-                    row.setVariables(this.parents);
+                    row.setVariables(this.variables);
                     row.setNode(this.node);
                     row.setParents(this.parents);
                     row.removeValue(i);
@@ -149,7 +150,7 @@ public class Table implements Cloneable {
                 }
         this.variables = newTable.get(0).getVariables();
         this.parents = newTable.get(0).getParents();
-        System.out.println("multiplied table before dup var elim:" + this);
+        this.table = newTable;
         for(String removeName : duplicateVariables)
             this.removeVariable(removeName);
     }
@@ -162,7 +163,7 @@ public class Table implements Cloneable {
             ProbRow firstRow = this.table.get(i);
             for(int j = i+1; j < this.table.size(); j++){
                 ProbRow secondRow = this.table.get(j);
-                if(firstRow.sameParentsValues(secondRow)){
+                if(firstRow.sameVariableValues(secondRow)){
                     ProbRow newRow = firstRow.clone();
                     double newProb = firstRow.getProb() + secondRow.getProb();
                     newRow.setProb(newProb);
@@ -183,6 +184,7 @@ public class Table implements Cloneable {
             nodeName = this.node.getName();
         return "\nnode: " + nodeName + "\n"
                 + "parents: " + this.parents + "\n"
+                + "nr of variables: " + this.variables.size() + "\n"
                 + table;
     }
 
@@ -194,5 +196,25 @@ public class Table implements Cloneable {
                 if(thisVar.equalName(otherVar))
                     intersectingVariables.add(thisVar.getName());
         return intersectingVariables;
+    }
+
+    void removeObservedVariables(ArrayList<Variable> observedVars) {
+        for(Variable observedVar : observedVars){
+            if(this.containsVariable(observedVar.getName())){
+                String observedValue = observedVar.getValue();
+                Iterator rowIter = this.table.iterator();
+                while(rowIter.hasNext()){
+                    ProbRow row = (ProbRow) rowIter.next();
+                    String currValue = row.getCorrespondingValue(observedVar);
+                    if(!currValue.equals(observedValue))
+                        rowIter.remove();
+                }
+            this.removeVariable(observedVar.getName());
+            }
+        }
+    }
+
+    ArrayList<Variable> getVariables() {
+        return this.variables;
     }
 }

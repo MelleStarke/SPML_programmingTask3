@@ -73,6 +73,8 @@ public class Variable implements Cloneable {
      * @return the value of the variable.
      */
     public String getValue(){
+        if(this.value.equals(""))
+            throw new IllegalArgumentException(this + " has no observed value");
         return value;
     }
 

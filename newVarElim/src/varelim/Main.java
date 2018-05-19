@@ -22,7 +22,7 @@ public class Main {
 		ArrayList<Table> Ps = reader.getPs(); 
 		
 		// Print variables and probabilities
-		reader.printNetwork(Vs, Ps);
+		//reader.printNetwork(Vs, Ps);
 
 		// Ask user for query and heuristic
 		reader.askForQuery(); 
@@ -44,5 +44,6 @@ public class Main {
 		//PUT YOUR CODE FOR THE VARIABLE ELIMINATION ALGORITHM HERE
                 VariableEliminator varElim = new VariableEliminator(Q, O, reader);
                 varElim.eliminateVariables();
+                System.out.println(varElim);
         }
 }

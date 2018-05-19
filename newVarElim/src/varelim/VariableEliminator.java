@@ -29,23 +29,40 @@ public class VariableEliminator {
     }
 
     void eliminateVariables() throws CloneNotSupportedException {
-        reduceObservedVariables();
+            if(!this.observedVars.isEmpty())
+                System.out.println("tables before observed removal:\n" + this.probTables + "\n\n");
+        reduceObservedValues();
+            if(!this.observedVars.isEmpty())
+                System.out.println("tables after observed removal:\n" + this.probTables + "\n\n");
         ArrayList<String> eliminationOrder = getEliminationOrder();
-        //System.out.println(probTables);
-        
+        System.out.println("elim order: " + eliminationOrder);
+        int i = 0;
         for(String varName : eliminationOrder){
+            System.out.println(i);
+            i++;
+            //    System.out.println("\n\ncurrent variable: " + varName);
             ArrayList<Table> correspondingTables = getCorrespondingTables(varName);
+            //    System.out.println("\ncorresponding tables:\n" + correspondingTables);
             removeTablesContaining(varName);
-            Table combinedTable = multiplyTables(correspondingTables);
-            Table reducedTable = reduceTable(combinedTable, varName);
+            Table multipliedTable = multiplyTables(correspondingTables);
+            //    System.out.println("\nmultiplied table: \n" + multipliedTable);
+            Table reducedTable = reduceTable(multipliedTable, varName);
+            //    System.out.println("\nreduced table:\n" + reducedTable);
             probTables.add(reducedTable);
         }
-        this.queryVarTable = (Table) this.probTables.clone();
-        this.queryVarTable.normalize();
+        for(Table tab : this.probTables)
+            tab.normalize();
     }
 
-    private void reduceObservedVariables() {
-        
+    private void reduceObservedValues() {
+        for(Table tab : this.probTables)
+            tab.removeObservedVariables(this.observedVars);
+        Iterator tabIter = this.probTables.iterator();
+        while(tabIter.hasNext()){
+            Table tab = (Table) tabIter.next();
+            if(tab.getVariables().isEmpty())
+                tabIter.remove();
+        }
     }
 
     private ArrayList<String> getEliminationOrder() throws CloneNotSupportedException {
@@ -108,7 +125,6 @@ public class VariableEliminator {
     private Table multiplyTables(ArrayList<Table> tables) throws CloneNotSupportedException {
         Table combinedTable = tables.get(0);
         tables.remove(0);
-        System.out.println("table size: " + tables.size());
         for(Table tab : tables)
             combinedTable.multiply(tab);
         return combinedTable;
@@ -121,9 +137,10 @@ public class VariableEliminator {
     
     @Override
     public String toString(){
-        return "queried:\t" + this.queryVar + "\n"
-                + "observed:\t" + this.observedVars + "\n"
-                + "result:\n"
-                + this.queryVarTable;
+        return "remaining probability tables after variable elimination:\n" + this.probTables;
+    }
+
+    ArrayList<Table> getProbTables() {
+        return this.probTables;
     }
 }

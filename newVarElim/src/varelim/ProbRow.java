@@ -26,8 +26,8 @@ public class ProbRow implements Cloneable {
             this.node = node;
             this.parents = parents;
             this.variables = new ArrayList<>();
+            this.variables.addAll(parents);    
             this.variables.add(node);
-            this.variables.addAll(parents);       
     }
 
     /**
@@ -35,7 +35,7 @@ public class ProbRow implements Cloneable {
      * @param pr a probability row
      * @return True if this probRow and pr have the same parents
      */
-    public boolean sameParentsValues(ProbRow pr) {
+    public boolean sameVariableValues(ProbRow pr) {
             return this.values.equals(pr.values);
     }
 
@@ -144,6 +144,20 @@ public class ProbRow implements Cloneable {
         this.variables.addAll(extraVars);
         this.parents.addAll(extraVars);
         this.values.addAll(extraValues);
-        this.prob = this.prob * other.getProb();
+        this.prob = this.prob * other.prob;
+    }
+
+    String getCorrespondingValue(Variable var) {
+        for(int i = 0; i < this.values.size(); i++)
+            if(this.variables.get(i).equalName(var))
+                return this.values.get(i);
+        throw new IllegalArgumentException(var + " isn't contained in " + this.variables);
+    }
+
+    boolean containsVariable(Variable var) {
+        for(Variable thisVar : this.variables)
+            if(var.equalName(thisVar))
+                return true;
+        return false;
     }
 }
