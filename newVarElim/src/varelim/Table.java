@@ -82,6 +82,14 @@ public class Table implements Cloneable {
             double newProb = row.getProb() / totalProb;
             row.setProb(newProb);
         }
+        if(this.node == null){
+            this.node = this.parents.get(0);
+            this.parents.remove(0);
+            for(ProbRow row : this.table){
+                row.setNode(this.node);
+                row.setParents(this.parents);
+            }
+        }
     }
 
     @Override

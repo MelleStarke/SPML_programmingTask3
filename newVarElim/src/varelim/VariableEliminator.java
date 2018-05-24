@@ -17,7 +17,7 @@ public class VariableEliminator {
     private Variable queryVar;
     private ArrayList<Variable> observedVars;
     private Networkreader network;
-    private Table queryVarTable;
+    private Table finalTable;
     private ArrayList<Table> probTables;
     
     public VariableEliminator(Variable Q, ArrayList<Variable> O, Networkreader network){
@@ -25,33 +25,28 @@ public class VariableEliminator {
         this.observedVars = O;
         this.network = network;
         this.probTables = network.getPs();
-        this.queryVarTable = null;
+        this.finalTable = null;
     }
 
     void eliminateVariables() throws CloneNotSupportedException {
-            if(!this.observedVars.isEmpty())
-                System.out.println("tables before observed removal:\n" + this.probTables + "\n\n");
         reduceObservedValues();
-            if(!this.observedVars.isEmpty())
-                System.out.println("tables after observed removal:\n" + this.probTables + "\n\n");
         ArrayList<String> eliminationOrder = getEliminationOrder();
         System.out.println("elim order: " + eliminationOrder);
-        int i = 0;
         for(String varName : eliminationOrder){
-            System.out.println(i);
-            i++;
-            //    System.out.println("\n\ncurrent variable: " + varName);
             ArrayList<Table> correspondingTables = getCorrespondingTables(varName);
-            //    System.out.println("\ncorresponding tables:\n" + correspondingTables);
             removeTablesContaining(varName);
             Table multipliedTable = multiplyTables(correspondingTables);
-            //    System.out.println("\nmultiplied table: \n" + multipliedTable);
             Table reducedTable = reduceTable(multipliedTable, varName);
-            //    System.out.println("\nreduced table:\n" + reducedTable);
             probTables.add(reducedTable);
         }
-        for(Table tab : this.probTables)
-            tab.normalize();
+        System.out.println("\nfinal tables:\n" + this.probTables);
+        
+        this.finalTable = this.probTables.get(0);
+        this.probTables.remove(0);
+        
+        for(Table otherTab : this.probTables)
+            finalTable.multiply(otherTab);
+        finalTable.normalize();
     }
 
     private void reduceObservedValues() {
@@ -137,7 +132,7 @@ public class VariableEliminator {
     
     @Override
     public String toString(){
-        return "remaining probability tables after variable elimination:\n" + this.probTables;
+        return "resulting table: " + this.finalTable;
     }
 
     ArrayList<Table> getProbTables() {
